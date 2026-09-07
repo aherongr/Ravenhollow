@@ -33,9 +33,14 @@ jobs:
         shell: bash
         run: |
           grep -n -E 'hardBudget|inputBudgetChars|safeMaxOutputTokens|versionName|versionCode' RavenhollowAndroid/app/src/main/java/gr/ravenhollow/app/PromptAssembler.kt RavenhollowAndroid/app/src/main/java/gr/ravenhollow/app/LocalEngines.kt RavenhollowAndroid/app/build.gradle.kts
-      - name: Verify source
+      - name: Diagnose source verifier
         working-directory: RavenhollowAndroid
-        run: sh ./verify_project.sh
+        shell: bash
+        run: |
+          echo '===== verify_project.sh ====='
+          cat ./verify_project.sh
+          echo '===== verifier trace ====='
+          sh -x ./verify_project.sh
       - name: Build debug APK
         working-directory: RavenhollowAndroid
         run: gradle --no-daemon :app:assembleDebug --stacktrace
