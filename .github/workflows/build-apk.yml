@@ -27,6 +27,10 @@ jobs:
           echo "9ae25f1adb6d8d91fc083c3ed445c2297e20343c890a93af248ed12951843a93  RavenhollowAndroid-v0.6.1-source.zip" | sha256sum -c -
           unzip -t RavenhollowAndroid-v0.6.1-source.zip
           unzip -q RavenhollowAndroid-v0.6.1-source.zip
+      - name: Apply compile fixes
+        shell: bash
+        run: |
+          sed -i 's/ModelInstaller.installedGguf(context)/ModelInstaller.installedGguf(this.context)/' RavenhollowAndroid/app/src/main/java/gr/ravenhollow/app/LocalEngines.kt
       - name: Verify source
         working-directory: RavenhollowAndroid
         run: sh ./verify_project.sh
