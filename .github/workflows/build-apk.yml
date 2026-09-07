@@ -31,6 +31,17 @@ jobs:
         shell: bash
         run: |
           sed -i 's/ModelInstaller.installedGguf(context)/ModelInstaller.installedGguf(this.context)/' RavenhollowAndroid/app/src/main/java/gr/ravenhollow/app/LocalEngines.kt
+      - name: Inspect inference source
+        shell: bash
+        run: |
+          echo '===== PromptAssembler.kt ====='
+          sed -n '1,320p' RavenhollowAndroid/app/src/main/java/gr/ravenhollow/app/PromptAssembler.kt
+          echo '===== InferenceCoordinator.kt ====='
+          sed -n '1,320p' RavenhollowAndroid/app/src/main/java/gr/ravenhollow/app/InferenceCoordinator.kt
+          echo '===== LocalEngines.kt ====='
+          sed -n '1,420p' RavenhollowAndroid/app/src/main/java/gr/ravenhollow/app/LocalEngines.kt
+          echo '===== MainActivity inference references ====='
+          grep -n -C 8 -E 'generate|infer|Inference|PromptAssembler|append|send|story' RavenhollowAndroid/app/src/main/java/gr/ravenhollow/app/MainActivity.kt || true
       - name: Verify source
         working-directory: RavenhollowAndroid
         run: sh ./verify_project.sh
