@@ -128,4 +128,9 @@ g = re.sub(r'versionCode\s*=\s*\d+', 'versionCode = 62', g)
 g = re.sub(r'versionName\s*=\s*"[^"]+"', 'versionName = "0.6.2"', g)
 gradle.write_text(g, encoding='utf-8')
 
-print('Patched prompt budget, Unicode token safety, output cap, and version 0.6.2')
+# Keep the bundled structural verifier aligned with the patched app version.
+verifier = Path('RavenhollowAndroid/verify_project.sh')
+v = verifier.read_text(encoding='utf-8').replace('0.6.1', '0.6.2')
+verifier.write_text(v, encoding='utf-8')
+
+print('Patched prompt budget, Unicode token safety, output cap, verifier, and version 0.6.2')
