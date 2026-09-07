@@ -33,21 +33,28 @@ jobs:
         shell: bash
         run: |
           grep -n -E 'hardBudget|inputBudgetChars|safeMaxOutputTokens|versionName|versionCode' RavenhollowAndroid/app/src/main/java/gr/ravenhollow/app/PromptAssembler.kt RavenhollowAndroid/app/src/main/java/gr/ravenhollow/app/LocalEngines.kt RavenhollowAndroid/app/build.gradle.kts
-      - name: Diagnose source verifier
+      - name: Verify source
         working-directory: RavenhollowAndroid
-        shell: bash
-        run: |
-          echo '===== verify_project.sh ====='
-          cat ./verify_project.sh
-          echo '===== verifier trace ====='
-          sh -x ./verify_project.sh
-      - name: Build debug APK
+        run: sh ./verify_project.sh
+      - name: Build replacement debug APK
         working-directory: RavenhollowAndroid
         run: gradle --no-daemon :app:assembleDebug --stacktrace
-      - name: Rename APK
+      - name: Rename replacement APK
         run: cp RavenhollowAndroid/app/build/outputs/apk/debug/app-debug.apk Ravenhollow-v0.6.2-debug.apk
-      - name: Upload APK
+      - name: Upload replacement APK
         uses: actions/upload-artifact@v4
         with:
           name: Ravenhollow-v0.6.2-debug-apk
           path: Ravenhollow-v0.6.2-debug.apk
+      - name: Prepare side-by-side safe test package
+        run: python3 ci/make_side_by_side_v062.py
+      - name: Build side-by-side safe APK
+        working-directory: RavenhollowAndroid
+        run: gradle --no-daemon clean :app:assembleDebug --stacktrace
+      - name: Rename side-by-side APK
+        run: cp RavenhollowAndroid/app/build/outputs/apk/debug/app-debug.apk Ravenhollow-v0.6.2-safe-side-by-side.apk
+      - name: Upload side-by-side APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ravenhollow-v0.6.2-safe-side-by-side-apk
+          path: Ravenhollow-v0.6.2-safe-side-by-side.apk
