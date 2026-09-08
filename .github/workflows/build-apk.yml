@@ -46,15 +46,34 @@ jobs:
         with:
           name: Ravenhollow-v0.6.2-debug-apk
           path: Ravenhollow-v0.6.2-debug.apk
-      - name: Prepare side-by-side safe test package
+      - name: Prepare side-by-side safe2 test package
         run: python3 ci/make_side_by_side_v062.py
-      - name: Build side-by-side safe APK
+      - name: Verify side-by-side package identity and provider
+        shell: bash
+        run: |
+          grep -F 'applicationId = "gr.ravenhollow.app.safe062b"' RavenhollowAndroid/app/build.gradle.kts
+          grep -F 'gr.ravenhollow.app.safe062b.files' RavenhollowAndroid/app/src/main/AndroidManifest.xml
+          if grep -F 'gr.ravenhollow.app.files' RavenhollowAndroid/app/src/main/AndroidManifest.xml; then
+            echo 'Old provider authority still present' >&2
+            exit 1
+          fi
+      - name: Build side-by-side safe2 APK
         working-directory: RavenhollowAndroid
         run: gradle --no-daemon clean :app:assembleDebug --stacktrace
+      - name: Verify compiled provider authority
+        shell: bash
+        run: |
+          unzip -p RavenhollowAndroid/app/build/outputs/apk/debug/app-debug.apk AndroidManifest.xml > /tmp/manifest.bin
+          strings -el /tmp/manifest.bin | tee /tmp/manifest-strings.txt
+          grep -F 'gr.ravenhollow.app.safe062b.files' /tmp/manifest-strings.txt
+          if grep -F 'gr.ravenhollow.app.files' /tmp/manifest-strings.txt; then
+            echo 'Compiled APK still contains conflicting provider authority' >&2
+            exit 1
+          fi
       - name: Rename side-by-side APK
-        run: cp RavenhollowAndroid/app/build/outputs/apk/debug/app-debug.apk Ravenhollow-v0.6.2-safe-side-by-side.apk
+        run: cp RavenhollowAndroid/app/build/outputs/apk/debug/app-debug.apk Ravenhollow-v0.6.2-safe2-side-by-side.apk
       - name: Upload side-by-side APK
         uses: actions/upload-artifact@v4
         with:
-          name: Ravenhollow-v0.6.2-safe-side-by-side-apk
-          path: Ravenhollow-v0.6.2-safe-side-by-side.apk
+          name: Ravenhollow-v0.6.2-safe2-side-by-side-apk
+          path: Ravenhollow-v0.6.2-safe2-side-by-side.apk
