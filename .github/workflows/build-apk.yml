@@ -10,77 +10,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: '17'
-      - uses: android-actions/setup-android@v3
-      - name: Install Android SDK 36
-        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
-      - uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.11.1'
       - name: Rebuild source archive
         shell: bash
         run: |
           cat source_chunks/part*.b64 | tr -d '\r\n' | base64 --decode > RavenhollowAndroid-v0.6.1-source.zip
-          echo "9ae25f1adb6d8d91fc083c3ed445c2297e20343c890a93af248ed12951843a93  RavenhollowAndroid-v0.6.1-source.zip" | sha256sum -c -
-          unzip -t RavenhollowAndroid-v0.6.1-source.zip
           unzip -q RavenhollowAndroid-v0.6.1-source.zip
-      - name: Apply Ravenhollow 0.6.2 inference fixes
-        run: python3 ci/patch_inference_v062.py
-      - name: Dump inference and story flow source
+      - name: Dump story path
         shell: bash
         run: |
-          echo '===== LocalEngines.kt ====='
-          sed -n '1,320p' RavenhollowAndroid/app/src/main/java/gr/ravenhollow/app/LocalEngines.kt
-          echo '===== Story flow matches ====='
-          grep -R -n -E 'Continue|isGenerating|generate\(|generateStory|Role\.NARRATOR|Role\.USER|DIRECTOR|insertTurn|addTurn|StoryTurn' RavenhollowAndroid/app/src/main/java/gr/ravenhollow/app | head -500 || true
-      - name: Verify patched inference budget
-        shell: bash
-        run: |
-          grep -n -E 'hardBudget|inputBudgetChars|safeMaxOutputTokens|versionName|versionCode' RavenhollowAndroid/app/src/main/java/gr/ravenhollow/app/PromptAssembler.kt RavenhollowAndroid/app/src/main/java/gr/ravenhollow/app/LocalEngines.kt RavenhollowAndroid/app/build.gradle.kts
-      - name: Verify source
-        working-directory: RavenhollowAndroid
-        run: sh ./verify_project.sh
-      - name: Build replacement debug APK
-        working-directory: RavenhollowAndroid
-        run: gradle --no-daemon :app:assembleDebug --stacktrace
-      - name: Rename replacement APK
-        run: cp RavenhollowAndroid/app/build/outputs/apk/debug/app-debug.apk Ravenhollow-v0.6.2-debug.apk
-      - name: Upload replacement APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: Ravenhollow-v0.6.2-debug-apk
-          path: Ravenhollow-v0.6.2-debug.apk
-      - name: Prepare side-by-side safe2 test package
-        run: python3 ci/make_side_by_side_v062.py
-      - name: Verify side-by-side package identity and provider
-        shell: bash
-        run: |
-          grep -F 'applicationId = "gr.ravenhollow.app.safe062b"' RavenhollowAndroid/app/build.gradle.kts
-          grep -F 'gr.ravenhollow.app.safe062b.files' RavenhollowAndroid/app/src/main/AndroidManifest.xml
-          if grep -F 'gr.ravenhollow.app.files' RavenhollowAndroid/app/src/main/AndroidManifest.xml; then
-            echo 'Old provider authority still present' >&2
-            exit 1
-          fi
-      - name: Build side-by-side safe2 APK
-        working-directory: RavenhollowAndroid
-        run: gradle --no-daemon clean :app:assembleDebug --stacktrace
-      - name: Verify compiled provider authority
-        shell: bash
-        run: |
-          unzip -p RavenhollowAndroid/app/build/outputs/apk/debug/app-debug.apk AndroidManifest.xml > /tmp/manifest.bin
-          strings -el /tmp/manifest.bin | tee /tmp/manifest-strings.txt
-          grep -F 'gr.ravenhollow.app.safe062b.files' /tmp/manifest-strings.txt
-          if grep -F 'gr.ravenhollow.app.files' /tmp/manifest-strings.txt; then
-            echo 'Compiled APK still contains conflicting provider authority' >&2
-            exit 1
-          fi
-      - name: Rename side-by-side APK
-        run: cp RavenhollowAndroid/app/build/outputs/apk/debug/app-debug.apk Ravenhollow-v0.6.2-safe2-side-by-side.apk
-      - name: Upload side-by-side APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: Ravenhollow-v0.6.2-safe2-side-by-side-apk
-          path: Ravenhollow-v0.6.2-safe2-side-by-side.apk
+          echo '===== RavenRepository.kt ====='
+          cat RavenhollowAndroid/app/src/main/java/gr/ravenhollow/app/RavenRepository.kt
+          echo '===== RavenDatabase.kt ====='
+          cat RavenhollowAndroid/app/src/main/java/gr/ravenhollow/app/RavenDatabase.kt
+          echo '===== MainActivity.kt lines 100-230 ====='
+          sed -n '100,230p' RavenhollowAndroid/app/src/main/java/gr/ravenhollow/app/MainActivity.kt
+          echo '===== MainActivity error/selftest matches ====='
+          grep -n -i -E 'error|exception|self.?test|interact|generat|snackbar|message' RavenhollowAndroid/app/src/main/java/gr/ravenhollow/app/MainActivity.kt || true
