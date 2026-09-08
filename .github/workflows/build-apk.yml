@@ -29,6 +29,16 @@ jobs:
           unzip -t RavenhollowAndroid-v0.6.1-source.zip
           unzip -q RavenhollowAndroid-v0.6.1-source.zip
 
+      - name: Inspect model import implementation
+        shell: bash
+        run: |
+          echo '===== ModelInstaller.kt ====='
+          cat RavenhollowAndroid/app/src/main/java/gr/ravenhollow/app/ModelInstaller.kt
+          echo '===== LocalEngineRegistry / LocalEngines ====='
+          cat RavenhollowAndroid/app/src/main/java/gr/ravenhollow/app/LocalEngines.kt
+          echo '===== MainActivity Local AI section ====='
+          sed -n '220,330p' RavenhollowAndroid/app/src/main/java/gr/ravenhollow/app/MainActivity.kt
+
       - name: Apply Ravenhollow 0.6.2 inference fixes
         run: python3 ci/patch_inference_v062.py
       - name: Apply Ravenhollow 0.6.3 mobile inference fixes
