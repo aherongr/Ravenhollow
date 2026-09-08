@@ -29,52 +29,48 @@ jobs:
           unzip -t RavenhollowAndroid-v0.6.1-source.zip
           unzip -q RavenhollowAndroid-v0.6.1-source.zip
 
-      - name: Apply inference and model replacement fixes
+      - name: Apply Ravenhollow fixes through v0.6.5
         run: |
           python3 ci/patch_inference_v062.py
           python3 ci/patch_inference_v063.py
           python3 ci/patch_model_replace_v064.py
+          python3 ci/patch_story_control_v065.py
 
-      - name: Verify v0.6.4 model replacement
+      - name: Verify v0.6.5 story control
         shell: bash
         run: |
-          grep -n -F 'installedGgufInfo' RavenhollowAndroid/app/src/main/java/gr/ravenhollow/app/ModelInstaller.kt
-          grep -n -F 'OpenableColumns.DISPLAY_NAME' RavenhollowAndroid/app/src/main/java/gr/ravenhollow/app/ModelInstaller.kt
-          grep -n -F 'LocalEngineRegistry.releaseText()' RavenhollowAndroid/app/src/main/java/gr/ravenhollow/app/MainActivity.kt
-          grep -n -F 'loadedLength' RavenhollowAndroid/app/src/main/java/gr/ravenhollow/app/LocalEngines.kt
-          grep -n -F 'Replace / import GGUF' RavenhollowAndroid/app/src/main/java/gr/ravenhollow/app/MainActivity.kt
-          if grep -R -F '/no_think' RavenhollowAndroid/app/src/main/java/gr/ravenhollow/app; then
-            echo 'Qwen3 /no_think token unexpectedly remains in v0.6.4' >&2
-            exit 1
-          fi
+          grep -n -F 'mobileOutputCap = minOf(768' RavenhollowAndroid/app/src/main/java/gr/ravenhollow/app/LocalEngines.kt
+          grep -n -F 'AHERON CONTROL IS ABSOLUTE' RavenhollowAndroid/app/src/main/java/gr/ravenhollow/app/PromptAssembler.kt
+          grep -n -F 'If the Director instruction is simply "Continue"' RavenhollowAndroid/app/src/main/java/gr/ravenhollow/app/PromptAssembler.kt
+          grep -n -F 'Recommended for Ravenhollow: ~3B Q4_K_M · context 4096' RavenhollowAndroid/app/src/main/java/gr/ravenhollow/app/MainActivity.kt
           grep -n -E 'versionCode|versionName' RavenhollowAndroid/app/build.gradle.kts
 
       - name: Verify source
         working-directory: RavenhollowAndroid
         run: sh ./verify_project.sh
 
-      - name: Prepare side-by-side Safe 4 package
-        run: python3 ci/make_side_by_side_v064.py
-      - name: Verify Safe 4 package identity and provider
+      - name: Prepare side-by-side Safe 5 package
+        run: python3 ci/make_side_by_side_v065.py
+      - name: Verify Safe 5 package identity and provider
         shell: bash
         run: |
-          grep -F 'applicationId = "gr.ravenhollow.app.safe064"' RavenhollowAndroid/app/build.gradle.kts
-          grep -F 'gr.ravenhollow.app.safe064.files' RavenhollowAndroid/app/src/main/AndroidManifest.xml
-          grep -F 'Ravenhollow Safe 4' RavenhollowAndroid/app/src/main/AndroidManifest.xml
+          grep -F 'applicationId = "gr.ravenhollow.app.safe065"' RavenhollowAndroid/app/build.gradle.kts
+          grep -F 'gr.ravenhollow.app.safe065.files' RavenhollowAndroid/app/src/main/AndroidManifest.xml
+          grep -F 'Ravenhollow Safe 5' RavenhollowAndroid/app/src/main/AndroidManifest.xml
           if grep -F 'gr.ravenhollow.app.files' RavenhollowAndroid/app/src/main/AndroidManifest.xml; then
             echo 'Old provider authority still present' >&2
             exit 1
           fi
 
-      - name: Build side-by-side Safe 4 APK
+      - name: Build side-by-side Safe 5 APK
         working-directory: RavenhollowAndroid
         run: gradle --no-daemon clean :app:assembleDebug --stacktrace
 
-      - name: Rename Safe 4 APK
-        run: cp RavenhollowAndroid/app/build/outputs/apk/debug/app-debug.apk Ravenhollow-v0.6.4-safe4-side-by-side.apk
+      - name: Rename Safe 5 APK
+        run: cp RavenhollowAndroid/app/build/outputs/apk/debug/app-debug.apk Ravenhollow-v0.6.5-safe5-side-by-side.apk
 
-      - name: Upload Safe 4 APK
+      - name: Upload Safe 5 APK
         uses: actions/upload-artifact@v4
         with:
-          name: Ravenhollow-v0.6.4-safe4-side-by-side-apk
-          path: Ravenhollow-v0.6.4-safe4-side-by-side.apk
+          name: Ravenhollow-v0.6.5-safe5-side-by-side-apk
+          path: Ravenhollow-v0.6.5-safe5-side-by-side.apk
