@@ -29,6 +29,13 @@ jobs:
           unzip -q RavenhollowAndroid-v0.6.1-source.zip
       - name: Apply Ravenhollow 0.6.2 inference fixes
         run: python3 ci/patch_inference_v062.py
+      - name: Dump inference and story flow source
+        shell: bash
+        run: |
+          echo '===== LocalEngines.kt ====='
+          sed -n '1,320p' RavenhollowAndroid/app/src/main/java/gr/ravenhollow/app/LocalEngines.kt
+          echo '===== Story flow matches ====='
+          grep -R -n -E 'Continue|isGenerating|generate\(|generateStory|Role\.NARRATOR|Role\.USER|DIRECTOR|insertTurn|addTurn|StoryTurn' RavenhollowAndroid/app/src/main/java/gr/ravenhollow/app | head -500 || true
       - name: Verify patched inference budget
         shell: bash
         run: |
